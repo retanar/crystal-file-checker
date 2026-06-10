@@ -1,9 +1,8 @@
 require "digest/sha256"
 
 class Hasher
-  def initialize(paths : Array(String))
+  def initialize(@paths : Array(String))
     @hasher = Digest::SHA256.new
-    @paths = paths
   end
 
   def hex_hash_file(path : Path | String)

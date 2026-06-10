@@ -1,40 +1,27 @@
 require "option_parser"
 
 require "./hasher"
-
-enum ProgramMode
-  Help
-  Hash
-end
-
-files_arg = nil
-out_arg = STDOUT
-
-program_mode = ProgramMode::Help
+require "./options"
 
 parser = OptionParser.parse do |parser|
   parser.banner = "File hasher and checker."
 
   parser.on("hash", "Produce a hashfile with hash of the passed file or all files in the dir. Defaults to current dir.") do
     parser.banner = "Usage: hash [path]"
-    program_mode = ProgramMode::Hash
+    Options.mode = ProgramMode::Hash
   end
 
   parser.on("help", "Print help.") do
-    run_help(parser)
+    # because this is a subcommand, it wouldn't print any meaningful help if called at this point
+    Options.mode = ProgramMode::Help
   end
 
   parser.on("-o PATH", "--output PATH", "Output file") do |path|
-    out_arg = File.new(path, "w")
+    Options.output = File.new(path, "w")
   end
 
   parser.unknown_args do |args|
-    if args.size == 0
-      STDERR.puts "Expected path to hash."
-      exit
-    end
-
-    files_arg = args
+    Options.input_paths = args
   end
 
   parser.invalid_option do |opt|
@@ -48,19 +35,19 @@ def run_help(parser)
   exit
 end
 
-def run_hash(input_path, output = STDOUT)
-  if input_path.nil?
+def run_hash
+  if Options.input_paths.empty?
     STDERR.puts "Expected path to hash."
     return
-  else
-    hasher = Hasher.new(input_path)
-    hasher.process_all(output)
   end
+
+  hasher = Hasher.new(Options.input_paths)
+  hasher.process_all(Options.output)
 end
 
-case program_mode
+case Options.mode
 in .help?
   run_help(parser)
 in .hash?
-  run_hash(files_arg, out_arg)
+  run_hash
 end
