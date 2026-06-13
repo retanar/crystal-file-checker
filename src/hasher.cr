@@ -1,7 +1,7 @@
 require "digest/sha256"
 
 class Hasher
-  def initialize(@paths : Array(String))
+  def initialize
     @hasher = Digest::SHA256.new
   end
 
@@ -14,8 +14,8 @@ class Hasher
   end
 
   # Main method. Output should be compatible with sha256sum at least in the first iteration.
-  def process_all(output : IO)
-    @paths.each do |path|
+  def hash_all(paths : Array(String), output : IO)
+    paths.each do |path|
       if File.file?(path)
         write_single(path, output)
       elsif File.directory?(path)
@@ -28,5 +28,28 @@ class Hasher
         STDERR.puts "#{path} is neither file, nor directory, can't work with it."
       end
     end
+    output.flush
+  end
+
+  def check_hashfile(path, output : IO)
+    File.each_line(path) do |line|
+      recorded_hash = line[0...64]
+      filename = line[66..]
+
+      if !File.file?(filename)
+        output.puts "ERR Does not exist  #{filename}"
+        next
+      end
+
+      calculated_hash = hex_hash_file(filename)
+      if recorded_hash != calculated_hash
+        output << "ERR Mismatch  "
+      else
+        output << "OK  "
+      end
+
+      output.puts filename
+    end
+    output.flush
   end
 end
