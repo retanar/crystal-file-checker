@@ -1,43 +1,6 @@
-require "option_parser"
-
 require "./hasher"
 require "./options"
-
-parser = OptionParser.parse do |parser|
-  parser.banner = "File hasher and checker."
-
-  parser.on("hash", "Produce a hashfile with hash of the passed file or all files in the dir. Defaults to current dir.") do
-    parser.banner = "Usage: hash [path...]"
-    Options.mode = ProgramMode::Hash
-  end
-
-  parser.on("help", "Print help.") do
-    # because this is a subcommand, it wouldn't print any meaningful help if called at this point
-    Options.mode = ProgramMode::Help
-  end
-
-  parser.on("check", "Checks all entries in a hashfile.") do
-    Options.mode = ProgramMode::Check
-  end
-
-  parser.on("-o PATH", "--output PATH", "Output file") do |path|
-    Options.output = File.new(path, "w")
-  end
-
-  parser.unknown_args do |args|
-    Options.input_paths = args
-  end
-
-  parser.invalid_option do |opt|
-    STDERR.puts "Invalid option #{opt}."
-    run_help(parser)
-  end
-end
-
-def run_help(parser)
-  puts parser
-  exit
-end
+require "./parser"
 
 def run_hash
   if Options.input_paths.empty?
@@ -45,7 +8,7 @@ def run_hash
   end
 
   hasher = Hasher.new
-  hasher.hash_all(Options.input_paths, Options.output)
+  hasher.hash_all(Options.input_paths, Options.hashfile)
 end
 
 # add hashfile validation
@@ -57,16 +20,18 @@ def run_check
 
   hashfile_path = Options.input_paths.first
   hasher = Hasher.new
-  hasher.check_hashfile(hashfile_path, Options.output)
+  hasher.check_hashfile(hashfile_path)
 end
+
+PARSER.parse
 
 case Options.mode
 in .help?
-  run_help(parser)
+  run_help
 in .hash?
   run_hash
 in .check?
   run_check
 end
 
-Options.output.close
+Options.hashfile.close

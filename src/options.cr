@@ -4,5 +4,6 @@ require "./program_mode"
 class Options
   class_property mode : ProgramMode = ProgramMode::Help
   class_property input_paths : Array(String) = Array(String).new
-  class_property output : IO = STDOUT
+  class_property hashfile : IO = STDOUT
+  class_property? rehash = false
 end
