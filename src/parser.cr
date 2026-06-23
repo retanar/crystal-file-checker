@@ -9,9 +9,8 @@ PARSER = OptionParser.new do |op|
     op.banner = "Usage: hash [path...]"
     Options.mode = ProgramMode::Hash
 
-    # TODO finish the options and then UI for this
-    op.on("-hf PATH", "--hashfile PATH", "Path to a new or existing hashfile to write file hashes to. If ommitted, prints to STDOUT.") do |path|
-      Options.hashfile = File.new(path, "a+")
+    op.on("-f PATH", "--hashfile PATH", "Path to a new or existing hashfile to write file hashes to. If ommitted, prints to STDOUT.") do |path|
+      Options.hashfile = File.new(path, "r+")
     end
 
     op.on("--rehash", "Also check existing hashes. On any differing hash, replace it and print notification about the mismatch.") do
