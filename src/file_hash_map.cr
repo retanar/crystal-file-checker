@@ -3,7 +3,7 @@ class FileHashMap
     property path : String
     property hash : Bytes
 
-    def initialize(@path, @hash = Bytes.empty)
+    def initialize(@path, @hash)
     end
 
     def ==(other : self)
@@ -29,13 +29,15 @@ class FileHashMap
   def initialize
   end
 
+  # TODO: overwrite? parameter
   # Checks if exists and normalizes the path before adding
   def add(path, hash)
-    stored = find_by_path(path)
+    path_norm = Path.posix(path).normalize.to_s
+    stored = find_by_path(path_norm)
     if stored
       stored.hash = hash
     else
-      add_unverified(Entry.new(Path.posix(path).normalize.to_s, hash))
+      add_unverified(Entry.new(path_norm, hash))
     end
   end
 
