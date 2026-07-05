@@ -32,7 +32,7 @@ class FileHashMap
   # TODO: overwrite? parameter
   # Checks if exists and normalizes the path before adding
   def add(path, hash)
-    path_norm = Path.posix(path).normalize.to_s
+    path_norm = self.class.normalize_s(path)
     stored = find_by_path(path_norm)
     if stored
       stored.hash = hash
@@ -62,6 +62,10 @@ class FileHashMap
     @state.each do |entry|
       yield entry
     end
+  end
+
+  def self.normalize_s(s)
+    Path.posix(s).normalize.to_s
   end
 
   def self.deserialize(io : IO)

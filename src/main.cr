@@ -2,6 +2,7 @@ require "./hasher"
 require "./options"
 require "./parser"
 require "./file_hash_map"
+require "./log"
 
 def run_hash
   if Options.input_paths.empty?
@@ -9,18 +10,17 @@ def run_hash
   end
 
   hasher = Hasher.new(Options.hashfile)
-  hasher.hash_all(Options.input_paths)
+  hasher.add_all(Options.input_paths)
   # should append new findings instead of serializing the entire thing
   hasher.save_hashfile
 end
 
 def run_check
-  if Options.input_paths.empty?
-    STDERR.puts "Expected a hashfile to check."
+  if Options.hashfile == STDOUT
+    logerr "Expected a --hashfile to check."
     return
   end
 
-  Options.hashfile = File.open(Options.input_paths.first)
   hasher = Hasher.new(Options.hashfile)
   hasher.check_hashfile
 end

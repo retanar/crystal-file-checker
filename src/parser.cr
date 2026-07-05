@@ -13,6 +13,7 @@ PARSER = OptionParser.new do |op|
       Options.hashfile = File.new(path, "r+")
     end
 
+    # TODO not implemented
     op.on("--rehash", "Also check existing hashes. On any differing hash, replace it and print notification about the mismatch.") do
       Options.rehash = true
     end
@@ -25,6 +26,10 @@ PARSER = OptionParser.new do |op|
 
   op.on("check", "Checks all entries in a hashfile.") do
     Options.mode = ProgramMode::Check
+
+    op.on("-f PATH", "--hashfile PATH", "Path to an existing hashfile to check") do |path|
+      Options.hashfile = File.new(path, "r")
+    end
   end
 
   op.on("-h", "--help", "Print help for a given subcommand") do
@@ -36,12 +41,12 @@ PARSER = OptionParser.new do |op|
   end
 
   op.invalid_option do |opt|
-    STDERR.puts "Invalid option #{opt}."
+    logerr "Invalid option #{opt}."
     run_help(op)
   end
 end
 
 def run_help(parser = PARSER)
-  puts parser
+  log parser
   exit
 end
