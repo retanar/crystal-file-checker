@@ -10,19 +10,19 @@ def run_hash
   end
 
   hasher = Hasher.new(Options.hashfile)
-  hasher.add_all(Options.input_paths)
+  hasher.add_all(Options.input_paths, Options.rehash?)
   # should append new findings instead of serializing the entire thing
   hasher.save_hashfile
 end
 
 def run_check
   if Options.hashfile == STDOUT
-    logerr "Expected a --hashfile to check."
+    logerr "Expected a -f/--hashfile to check."
     return
   end
 
   hasher = Hasher.new(Options.hashfile)
-  hasher.check_hashfile
+  hasher.check_all
 end
 
 # Main execution

@@ -29,16 +29,20 @@ class FileHashMap
   def initialize
   end
 
-  # TODO: overwrite? parameter
   # Checks if exists and normalizes the path before adding
-  def add(path, hash)
+  def add(path, hash : Proc(Bytes), overwrite = false)
     path_norm = self.class.normalize_s(path)
     stored = find_by_path(path_norm)
-    if stored
-      stored.hash = hash
-    else
-      add_unverified(Entry.new(path_norm, hash))
+
+    if !stored
+      add_unverified(Entry.new(path_norm, hash.call))
+    elsif overwrite
+      stored.hash = hash.call
     end
+  end
+
+  def add_force(path, hash)
+    add(path, -> { hash }, true)
   end
 
   # Doesn't do the checks `add` does
