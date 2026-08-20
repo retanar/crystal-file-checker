@@ -29,6 +29,7 @@ class FileHashMap
   def initialize
   end
 
+  # TODO return Entry obj
   # Checks if exists and normalizes the path before adding
   def add(path, hash : Proc(Bytes), overwrite = false)
     path_norm = self.class.normalize_s(path)
@@ -75,9 +76,18 @@ class FileHashMap
   def self.deserialize(io : IO)
     fhm = new
     io.each_line do |line|
-      fhm.add_unverified(Entry.parse_string(line))
+      if line[64..65]? != "  "
+        logerr "Invalid hashfile, no spaces at expected positions"
+        exit
+      end
+      entry = Entry.parse_string(line)
+      fhm.add_unverified(entry)
     end
     fhm
+
+  rescue ArgumentError
+    logerr "Invalid hashfile, couldn't convert the hash hexstring"
+    exit
   end
 
   def serialize(io : IO)

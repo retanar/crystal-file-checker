@@ -5,7 +5,7 @@ require "digest/sha256"
 class Hasher
   @hasher = Digest::SHA256.new
 
-  def initialize(@hashfile : IO)
+  def initialize(@hashfile : IO, @hashfile_path : String, @excluded_regex : Regex? = nil)
     @file_map = if @hashfile != STDOUT
                   FileHashMap.deserialize(@hashfile)
                 else
@@ -20,13 +20,17 @@ class Hasher
   # Adds all new files and hashes to the FileHashMap.
   # Output should be compatible with sha256sum at least in the first iteration.
   # Skips files already existing in the FileHashMap (hashfile).
+  #
+  # TODO print all entries added/skipped
   def add_all(paths, rehash = false)
     paths.each do |path|
       if File.file?(path)
         add_single(path, rehash)
       elsif File.directory?(path)
-        Dir.glob("#{path}/**/*", match: File::MatchOptions::All) do |nested_path|
+        Dir.glob("#{path}/**/*", match: File::MatchOptions::None) do |nested_path|
           next if File.directory?(nested_path)
+          path_norm = FileHashMap.normalize_s(nested_path)
+          next if excluded?(path_norm)
           add_single(nested_path, rehash)
         end
       else
@@ -53,6 +57,13 @@ class Hasher
       log "ERR Mismatch, stored #{stored.hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
       @file_map.add_force(path, result.calculated_hash)
     end
+  end
+
+  def excluded?(path)
+    if regex = @excluded_regex
+      return true if path.matches_full?(regex)
+    end
+    path == @hashfile_path
   end
 
   def check_all

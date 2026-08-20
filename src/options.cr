@@ -2,6 +2,8 @@
 class Options
   class_property mode : ProgramMode = ProgramMode::Help
   class_property input_paths : Array(String) = Array(String).new
+  class_property excluded_regex : Regex? = nil
+  class_property hashfile_path : String = ""
   class_property hashfile : IO = STDOUT
   class_property? rehash = false
 end

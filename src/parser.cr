@@ -1,7 +1,5 @@
 require "option_parser"
 
-require "./options"
-
 PARSER = OptionParser.new do |op|
   op.banner = "File hasher and checker."
 
@@ -10,13 +8,19 @@ PARSER = OptionParser.new do |op|
     Options.mode = ProgramMode::Hash
 
     op.on("-f PATH", "--hashfile PATH", "Path to a new or existing hashfile to write file hashes to. If ommitted, prints to STDOUT.") do |path|
-      Options.hashfile = File.new(path, "r+")
+      path_norm = FileHashMap.normalize_s(path)
+      Options.hashfile_path = path_norm
     end
 
-    # TODO not implemented
     op.on("--rehash", "Also check existing hashes. On any differing hash, replace it and print notification about the mismatch.") do
       Options.rehash = true
     end
+
+    op.on("--exclude REGEX", "Skip files, relative paths of which fully match the regex.") do |regex|
+      Options.excluded_regex = Regex.new(regex)
+    end
+
+    # TODO include hidden, quiet
   end
 
   op.on("help", "Print help. Same as -h without a subcommand.") do
@@ -28,8 +32,11 @@ PARSER = OptionParser.new do |op|
     Options.mode = ProgramMode::Check
 
     op.on("-f PATH", "--hashfile PATH", "Path to an existing hashfile to check") do |path|
-      Options.hashfile = File.new(path, "r")
+      path_norm = FileHashMap.normalize_s(path)
+      Options.hashfile_path = path_norm
     end
+
+    # TODO option remove incorrect from hashfile, only errors
   end
 
   op.on("-h", "--help", "Print help for a given subcommand") do
