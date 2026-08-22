@@ -5,12 +5,13 @@ require "digest/sha256"
 class Hasher
   @hasher = Digest::SHA256.new
 
-  def initialize(@hashfile : IO, @hashfile_path : String, @excluded_regex : Regex? = nil)
-    @file_map = if @hashfile != STDOUT
-                  FileHashMap.deserialize(@hashfile)
-                else
-                  FileHashMap.new
-                end
+  def initialize(
+    @hashfile : IO?,
+    @hashfile_path : String,
+    @match_option : File::MatchOptions = File::MatchOptions::None,
+    @excluded_regex : Regex? = nil,
+  )
+    @file_map = @hashfile.try { |hf| FileHashMap.deserialize(hf) } || FileHashMap.new
   end
 
   def hash_file(path)
@@ -20,14 +21,12 @@ class Hasher
   # Adds all new files and hashes to the FileHashMap.
   # Output should be compatible with sha256sum at least in the first iteration.
   # Skips files already existing in the FileHashMap (hashfile).
-  #
-  # TODO print all entries added/skipped
   def add_all(paths, rehash = false)
     paths.each do |path|
       if File.file?(path)
         add_single(path, rehash)
       elsif File.directory?(path)
-        Dir.glob("#{path}/**/*", match: File::MatchOptions::None) do |nested_path|
+        Dir.glob("#{path}/**/*", match: @match_option) do |nested_path|
           next if File.directory?(nested_path)
           path_norm = FileHashMap.normalize_s(nested_path)
           next if excluded?(path_norm)
@@ -44,7 +43,8 @@ class Hasher
     path = FileHashMap.normalize_s(path)
     stored = @file_map.find_by_path(path)
     if !rehash || !stored
-      @file_map.add(path, -> { hash_file(path) })
+      entry = @file_map.add(path, -> { hash_file(path) })
+      log entry if entry
       return
     end
 
@@ -60,7 +60,7 @@ class Hasher
   end
 
   def excluded?(path)
-    if regex = @excluded_regex
+    @excluded_regex.try do |regex|
       return true if path.matches_full?(regex)
     end
     path == @hashfile_path
@@ -87,8 +87,10 @@ class Hasher
   end
 
   def save_hashfile(io = @hashfile)
-    io.seek(0) unless io == STDOUT
-    @file_map.serialize(io)
+    if io
+      io.seek(0)
+      @file_map.serialize(io)
+    end
   end
 
   class CheckResult

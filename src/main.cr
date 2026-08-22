@@ -15,7 +15,7 @@ def run_hash
     Options.hashfile = File.new(hfpath, mode)
   end
 
-  hasher = Hasher.new(Options.hashfile, Options.hashfile_path, Options.excluded_regex)
+  hasher = Hasher.new(Options.hashfile, Options.hashfile_path, Options.match_option, Options.excluded_regex)
   hasher.add_all(Options.input_paths, Options.rehash?)
   # should append new findings instead of serializing the entire thing
   hasher.save_hashfile
@@ -44,4 +44,4 @@ in .check?
   run_check
 end
 
-Options.hashfile.close unless Options.hashfile == STDOUT
+Options.hashfile.try &.close

@@ -29,7 +29,6 @@ class FileHashMap
   def initialize
   end
 
-  # TODO return Entry obj
   # Checks if exists and normalizes the path before adding
   def add(path, hash : Proc(Bytes), overwrite = false)
     path_norm = self.class.normalize_s(path)
@@ -37,8 +36,10 @@ class FileHashMap
 
     if !stored
       add_unverified(Entry.new(path_norm, hash.call))
+      @state.last
     elsif overwrite
       stored.hash = hash.call
+      stored
     end
   end
 
@@ -84,7 +85,6 @@ class FileHashMap
       fhm.add_unverified(entry)
     end
     fhm
-
   rescue ArgumentError
     logerr "Invalid hashfile, couldn't convert the hash hexstring"
     exit

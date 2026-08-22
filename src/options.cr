@@ -4,7 +4,8 @@ class Options
   class_property input_paths : Array(String) = Array(String).new
   class_property excluded_regex : Regex? = nil
   class_property hashfile_path : String = ""
-  class_property hashfile : IO = STDOUT
+  class_property hashfile : IO? = nil
+  class_property match_option : File::MatchOptions = File::MatchOptions::None
   class_property? rehash = false
 end
 

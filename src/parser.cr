@@ -20,7 +20,11 @@ PARSER = OptionParser.new do |op|
       Options.excluded_regex = Regex.new(regex)
     end
 
-    # TODO include hidden, quiet
+    op.on("--hidden", "Includes hidden files when traversing directories.") do
+      Options.match_option = File::MatchOptions::All
+    end
+
+    # TODO quiet
   end
 
   op.on("help", "Print help. Same as -h without a subcommand.") do
