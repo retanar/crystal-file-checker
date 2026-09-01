@@ -25,6 +25,8 @@ class FileHashMap
   include Enumerable(Entry)
 
   @state = Array(Entry).new
+  # Search cache
+  @find_last_result = Entry.new("", Bytes.empty)
 
   def initialize
   end
@@ -57,11 +59,17 @@ class FileHashMap
   end
 
   def find_by_path(path)
-    find { |entry| entry.path == path }
+    return @find_last_result if @find_last_result.path == path
+    res = find { |entry| entry.path == path }
+    @find_last_result = res if res
+    res
   end
 
   def find_by_hash(hash)
-    find { |entry| entry.hash == hash }
+    return @find_last_result if @find_last_result.hash == hash
+    res = find { |entry| entry.hash == hash }
+    @find_last_result = res if res
+    res
   end
 
   def each(&)

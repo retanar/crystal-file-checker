@@ -33,13 +33,12 @@ class Hasher
           add_single(nested_path, rehash)
         end
       else
-        logerr "#{path} is neither file, nor directory, can't work with it."
+        logerr "#{path} is neither a file nor a directory, can't work with it."
       end
     end
   end
 
   def add_single(path, rehash = false)
-    # TODO fixme double search
     path = FileHashMap.normalize_s(path)
     stored = @file_map.find_by_path(path)
     if !rehash || !stored
