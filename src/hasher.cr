@@ -8,6 +8,7 @@ class Hasher
   def initialize(
     @hashfile : IO?,
     @hashfile_path : String,
+    @dry_run : Bool = false,
     @match_option : File::MatchOptions = File::MatchOptions::None,
     @excluded_regex : Regex? = nil,
   )
@@ -41,6 +42,12 @@ class Hasher
   def add_single(path, rehash = false)
     path = FileHashMap.normalize_s(path)
     stored = @file_map.find_by_path(path)
+
+    if @dry_run
+      log FileHashMap::Entry.new(path, Bytes.new(32)) if !stored
+      return
+    end
+
     if !rehash || !stored
       entry = @file_map.add(path, -> { hash_file(path) })
       log entry if entry
@@ -80,13 +87,13 @@ class Hasher
 
   def check_single(path, stored_hash)
     return CheckResult::NotExist.new unless File.file?(path)
-    calculated_hash = hash_file(path)
+    calculated_hash = @dry_run ? stored_hash : hash_file(path)
     return CheckResult::Mismatch.new(calculated_hash) unless stored_hash == calculated_hash
     CheckResult::Ok.new
   end
 
   def save_hashfile(io = @hashfile)
-    if io
+    if io && !@dry_run
       io.seek(0)
       @file_map.serialize(io)
     end

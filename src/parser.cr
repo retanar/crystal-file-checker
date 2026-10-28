@@ -47,6 +47,10 @@ PARSER = OptionParser.new do |op|
     run_help(op)
   end
 
+  op.on("--dry-run", "Output files that will be processed, without hashing them.") do
+    Options.dry_run = true
+  end
+
   op.unknown_args do |args|
     Options.input_paths = args
   end

@@ -15,7 +15,13 @@ def run_hash
     Options.hashfile = File.new(hfpath, mode)
   end
 
-  hasher = Hasher.new(Options.hashfile, Options.hashfile_path, Options.match_option, Options.excluded_regex)
+  hasher = Hasher.new(
+    hashfile: Options.hashfile,
+    hashfile_path: Options.hashfile_path,
+    dry_run: Options.dry_run?,
+    match_option: Options.match_option,
+    excluded_regex: Options.excluded_regex,
+  )
   hasher.add_all(Options.input_paths, Options.rehash?)
   # should append new findings instead of serializing the entire thing
   hasher.save_hashfile
@@ -27,7 +33,11 @@ def run_check
     return
   end
   Options.hashfile = File.new(Options.hashfile_path, "r")
-  hasher = Hasher.new(Options.hashfile, Options.hashfile_path)
+  hasher = Hasher.new(
+    hashfile: Options.hashfile,
+    hashfile_path: Options.hashfile_path,
+    dry_run: Options.dry_run?,
+  )
   hasher.check_all
 end
 

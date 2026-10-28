@@ -7,6 +7,7 @@ class Options
   class_property hashfile : IO? = nil
   class_property match_option : File::MatchOptions = File::MatchOptions::None
   class_property? rehash = false
+  class_property? dry_run = false
 end
 
 enum ProgramMode
