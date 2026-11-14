@@ -8,7 +8,7 @@ PARSER = OptionParser.new do |op|
     Options.mode = ProgramMode::Hash
 
     op.on("-f PATH", "--hashfile PATH", "Path to a new or existing hashfile to write file hashes to. If ommitted, prints to STDOUT.") do |path|
-      path_norm = FileHashMap.normalize_s(path)
+      path_norm = path.normalize
       Options.hashfile_path = path_norm
     end
 
@@ -36,7 +36,7 @@ PARSER = OptionParser.new do |op|
     Options.mode = ProgramMode::Check
 
     op.on("-f PATH", "--hashfile PATH", "Path to an existing hashfile to check") do |path|
-      path_norm = FileHashMap.normalize_s(path)
+      path_norm = path.normalize
       Options.hashfile_path = path_norm
     end
 

@@ -1,8 +1,9 @@
+require "./data/file_hash_map"
 require "./hasher"
+require "./log"
 require "./options"
 require "./parser"
-require "./file_hash_map"
-require "./log"
+require "./path_util"
 
 def run_hash
   if Options.input_paths.empty?
@@ -23,7 +24,6 @@ def run_hash
     excluded_regex: Options.excluded_regex,
   )
   hasher.add_all(Options.input_paths, Options.rehash?)
-  # should append new findings instead of serializing the entire thing
   hasher.save_hashfile
 end
 

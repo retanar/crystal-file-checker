@@ -12,7 +12,7 @@ class Hasher
     @match_option : File::MatchOptions = File::MatchOptions::None,
     @excluded_regex : Regex? = nil,
   )
-    @file_map = @hashfile.try { |hf| FileHashMap.deserialize(hf) } || FileHashMap.new
+    @fhm = @hashfile.try { |hf| FileHashMap.deserialize(hf) } || FileHashMap.new
   end
 
   def hash_file(path)
@@ -25,13 +25,13 @@ class Hasher
   def add_all(paths, rehash = false)
     paths.each do |path|
       if File.file?(path)
-        add_single(path, rehash)
+        add_single(path.normalize, rehash)
       elsif File.directory?(path)
         Dir.glob("#{path}/**/*", match: @match_option) do |nested_path|
           next if File.directory?(nested_path)
-          path_norm = FileHashMap.normalize_s(nested_path)
+          path_norm = nested_path.normalize
           next if excluded?(path_norm)
-          add_single(nested_path, rehash)
+          add_single(path_norm, rehash)
         end
       else
         logerr "#{path} is neither a file nor a directory, can't work with it."
@@ -39,29 +39,30 @@ class Hasher
     end
   end
 
+  # path should be normalized already
   def add_single(path, rehash = false)
-    path = FileHashMap.normalize_s(path)
-    stored = @file_map.find_by_path(path)
+    stored = @fhm.find_by_path(path)
 
     if @dry_run
-      log FileHashMap::Entry.new(path, Bytes.new(32)) if !stored
+      log Entry.new(path, Bytes.new(32)) if !stored || rehash
       return
     end
 
-    if !rehash || !stored
-      entry = @file_map.add(path, -> { hash_file(path) })
+    unless stored
+      entry = @fhm.add(path, hash_file(path))
       log entry if entry
       return
     end
 
+    return unless rehash
+
     # Exists but matches - nothing. Mismatch - update.
     case result = check_single(path, stored.hash)
     when CheckResult::NotExist
-      log "ERR Does not exist  #{path}"
-      @file_map.delete(path)
+      log "ERR This code shouldn't usually trigger. Does not exist #{path}"
     when CheckResult::Mismatch
-      log "ERR Mismatch, stored #{stored.hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
-      @file_map.add_force(path, result.calculated_hash)
+      log "Mismatch, rewrote stored #{stored.hash.hexstring}, with actual #{result.calculated_hash.hexstring}  #{path}"
+      @fhm.add(path, result.calculated_hash)
     end
   end
 
@@ -73,13 +74,13 @@ class Hasher
   end
 
   def check_all
-    @file_map.each do |entry|
-      stored_hash = entry.hash
+    @fhm.sorted.each do |entry|
       path = entry.path
+      hash = entry.hash
 
-      case result = check_single(path, stored_hash)
+      case result = check_single(path, hash)
       when CheckResult::NotExist then log "ERR Does not exist  #{path}"
-      when CheckResult::Mismatch then log "ERR Mismatch, stored #{stored_hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
+      when CheckResult::Mismatch then log "ERR Mismatch, stored #{hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
       when CheckResult::Ok       then log "OK  #{path}"
       end
     end
@@ -92,10 +93,11 @@ class Hasher
     CheckResult::Ok.new
   end
 
+  # Rewrites the hashfile completely
   def save_hashfile(io = @hashfile)
     if io && !@dry_run
       io.seek(0)
-      @file_map.serialize(io)
+      @fhm.serialize(io)
     end
   end
 
