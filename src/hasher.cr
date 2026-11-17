@@ -59,9 +59,9 @@ class Hasher
     # Exists but matches - nothing. Mismatch - update.
     case result = check_single(path, stored.hash)
     when CheckResult::NotExist
-      log "ERR This code shouldn't usually trigger. Does not exist #{path}"
+      logerr "ERR This code shouldn't usually trigger. Does not exist #{path}"
     when CheckResult::Mismatch
-      log "Mismatch, rewrote stored #{stored.hash.hexstring}, with actual #{result.calculated_hash.hexstring}  #{path}"
+      logimp "Mismatch, rewrote stored #{stored.hash.hexstring}, with actual #{result.calculated_hash.hexstring}  #{path}"
       @fhm.add(path, result.calculated_hash)
     end
   end
@@ -79,8 +79,8 @@ class Hasher
       hash = entry.hash
 
       case result = check_single(path, hash)
-      when CheckResult::NotExist then log "ERR Does not exist  #{path}"
-      when CheckResult::Mismatch then log "ERR Mismatch, stored #{hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
+      when CheckResult::NotExist then logerr "ERR Does not exist  #{path}"
+      when CheckResult::Mismatch then logerr "ERR Mismatch, stored #{hash.hexstring}, actual #{result.calculated_hash.hexstring}  #{path}"
       when CheckResult::Ok       then log "OK  #{path}"
       end
     end

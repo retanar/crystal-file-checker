@@ -8,6 +8,7 @@ class Options
   class_property match_option : File::MatchOptions = File::MatchOptions::None
   class_property? rehash = false
   class_property? dry_run = false
+  class_property? quiet = false
 end
 
 enum ProgramMode
