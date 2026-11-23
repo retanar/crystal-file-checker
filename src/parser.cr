@@ -26,11 +26,10 @@ PARSER = OptionParser.new do |op|
   end
 
   op.on("check", "Checks all entries in a hashfile.") do
+    op.banner = "Usage: check [options] -f <hashfile>"
     Options.mode = ProgramMode::Check
 
-    op.banner = "Usage: check [options] -f <hashfile>"
-
-    # TODO option remove incorrect from hashfile
+    # TODO option remove missing from hashfile
   end
 
   op.on("-h", "--help", "Print help for a given subcommand.") do
